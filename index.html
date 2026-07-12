@@ -1978,9 +1978,18 @@
     });
 
     function moveNoButton() {
-      const x = (Math.random() * 110 + 28) * (Math.random() > 0.5 ? 1 : -1);
-      const y = (Math.random() * 48 + 8) * (Math.random() > 0.5 ? 1 : -1);
-      noButton.style.transform = `translate(${x}px, ${y}px)`;
+      const rect = noButton.getBoundingClientRect();
+      const currentLeft = rect.left;
+      const currentTop = rect.top;
+      const moveX = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 140 + 60);
+      const moveY = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 100 + 30);
+
+      const nextLeft = currentLeft + moveX;
+      const nextTop = currentTop + moveY;
+      const clampedX = Math.max(12, Math.min(nextLeft, window.innerWidth - rect.width - 12)) - currentLeft;
+      const clampedY = Math.max(12, Math.min(nextTop, window.innerHeight - rect.height - 12)) - currentTop;
+
+      noButton.style.transform = `translate(${clampedX}px, ${clampedY}px)`;
     }
 
     noButton.addEventListener("pointerenter", () => {
@@ -2093,6 +2102,7 @@
           micSource = audioContext.createMediaStreamSource(micStream);
           analyser = audioContext.createAnalyser();
           analyser.fftSize = 256;
+          analyser.smoothingTimeConstant = 0.88;
           micSource.connect(analyser);
         }
 
@@ -2119,25 +2129,21 @@
     }
 
     function listenForBlow() {
-      const data = new Uint8Array(analyser.fftSize);
+      const data = new Uint8Array(analyser.frequencyBinCount);
       let loudFrames = 0;
-      const blowThreshold = 24;
-      const requiredLoudFrames = 12;
+      const requiredLoudFrames = 10;
+      const threshold = 150;
 
       function tick() {
-        analyser.getByteTimeDomainData(data);
-        let sum = 0;
+        analyser.getByteFrequencyData(data);
+        const average = data.reduce((sum, value) => sum + value, 0) / data.length;
+        const peak = Math.max(...data);
+        const intensity = average * 0.55 + peak * 0.45;
 
-        for (let i = 0; i < data.length; i += 1) {
-          sum += Math.abs(data[i] - 128);
-        }
-
-        const amplitude = sum / data.length;
-
-        if (amplitude > blowThreshold) {
+        if (intensity > threshold) {
           loudFrames += 1;
         } else {
-          loudFrames = Math.max(0, loudFrames - 2);
+          loudFrames = Math.max(0, loudFrames - 1);
         }
 
         if (loudFrames >= requiredLoudFrames) {
