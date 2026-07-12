@@ -2082,20 +2082,28 @@
     }
 
     function listenForBlow() {
-      const data = new Uint8Array(analyser.frequencyBinCount);
+      const data = new Uint8Array(analyser.fftSize);
       let loudFrames = 0;
+      const blowThreshold = 24;
+      const requiredLoudFrames = 12;
 
       function tick() {
-        analyser.getByteFrequencyData(data);
-        const volume = data.reduce((sum, value) => sum + value, 0) / data.length;
+        analyser.getByteTimeDomainData(data);
+        let sum = 0;
 
-        if (volume > 34) {
-          loudFrames += 1;
-        } else {
-          loudFrames = Math.max(0, loudFrames - 1);
+        for (let i = 0; i < data.length; i += 1) {
+          sum += Math.abs(data[i] - 128);
         }
 
-        if (loudFrames > 5) {
+        const amplitude = sum / data.length;
+
+        if (amplitude > blowThreshold) {
+          loudFrames += 1;
+        } else {
+          loudFrames = Math.max(0, loudFrames - 2);
+        }
+
+        if (loudFrames >= requiredLoudFrames) {
           blowCandles();
           return;
         }
