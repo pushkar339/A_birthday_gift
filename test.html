@@ -1,0 +1,2209 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>For You</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,800&family=Inter:wght@500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream: #fff7f2;
+      --blush: #f8d9d7;
+      --rose: #d96f86;
+      --rose-dark: #7b2c3d;
+      --ink: #5d2431;
+      --card: #fffafa;
+      --line: rgba(123, 44, 61, 0.12);
+      --shadow: 0 24px 70px rgba(123, 44, 61, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: "Inter", system-ui, sans-serif;
+      background:
+        radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.8), transparent 26%),
+        radial-gradient(circle at 88% 72%, rgba(248, 217, 215, 0.68), transparent 28%),
+        linear-gradient(135deg, var(--cream), #fbe5e3 58%, #f4cbc9);
+      overflow-x: hidden;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .page {
+      position: relative;
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: clamp(18px, 4vw, 44px);
+      isolation: isolate;
+    }
+
+    .heart-field {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .heart {
+      position: absolute;
+      width: var(--size);
+      height: var(--size);
+      color: #c96a7c;
+      opacity: var(--alpha);
+      animation: floatHeart var(--speed) ease-in-out infinite;
+      animation-delay: var(--delay);
+    }
+
+    .heart::before {
+      content: "♥";
+      display: block;
+      font-size: var(--size);
+      line-height: 1;
+      transform: rotate(var(--tilt));
+    }
+
+    .soft-bloom {
+      position: absolute;
+      width: var(--size);
+      height: var(--size);
+      border-radius: 999px 999px 999px 0;
+      background: rgba(217, 111, 134, 0.22);
+      opacity: var(--alpha);
+      transform: rotate(var(--tilt));
+      animation: driftBloom var(--speed) ease-in-out infinite;
+      animation-delay: var(--delay);
+    }
+
+    .edge-vine {
+      position: absolute;
+      top: 10%;
+      bottom: 10%;
+      width: min(170px, 16vw);
+      opacity: 0.42;
+      background:
+        radial-gradient(ellipse at 30% 9%, rgba(196, 93, 112, 0.2) 0 10px, transparent 11px),
+        radial-gradient(ellipse at 70% 24%, rgba(196, 93, 112, 0.16) 0 12px, transparent 13px),
+        radial-gradient(ellipse at 24% 43%, rgba(196, 93, 112, 0.14) 0 11px, transparent 12px),
+        radial-gradient(ellipse at 74% 61%, rgba(196, 93, 112, 0.18) 0 13px, transparent 14px),
+        radial-gradient(ellipse at 34% 82%, rgba(196, 93, 112, 0.13) 0 10px, transparent 11px);
+      animation: vineBreathe 7s ease-in-out infinite;
+    }
+
+    .edge-vine.left {
+      left: 2.5%;
+    }
+
+    .edge-vine.right {
+      right: 2.5%;
+      transform: scaleX(-1);
+      animation-delay: -2.6s;
+    }
+
+    .paper-bit {
+      position: absolute;
+      width: var(--w);
+      height: calc(var(--w) * 0.48);
+      border: 2px solid rgba(196, 93, 112, 0.13);
+      border-radius: 10px;
+      opacity: var(--alpha);
+      transform: rotate(var(--r));
+      animation: floatHeart var(--speed) ease-in-out infinite;
+      animation-delay: var(--delay);
+    }
+
+    @keyframes vineBreathe {
+      0%,
+      100% {
+        opacity: 0.34;
+        transform: translateY(0);
+      }
+
+      50% {
+        opacity: 0.5;
+        transform: translateY(12px);
+      }
+    }
+
+    @keyframes floatHeart {
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-14px);
+      }
+    }
+
+    @keyframes driftBloom {
+      0%,
+      100% {
+        transform: translateY(0) rotate(var(--tilt));
+      }
+
+      50% {
+        transform: translateY(12px) rotate(calc(var(--tilt) + 7deg));
+      }
+    }
+
+    .invitation {
+      width: min(880px, 100%);
+      min-height: min(640px, calc(100dvh - 88px));
+      display: grid;
+      place-items: center;
+      padding: clamp(26px, 5vw, 48px);
+      text-align: center;
+      background: rgba(255, 250, 250, 0.76);
+      border: 1px solid rgba(255, 255, 255, 0.78);
+      border-radius: 34px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      animation: pageIn 580ms ease both;
+    }
+
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: grid;
+    }
+
+    .page:has(.bouquet.active),
+    .page:has(.memories.active),
+    .page:has(.cake.active),
+    .page:has(.letter.active) {
+      padding: 0;
+      background: #ffd9d8;
+    }
+
+    @keyframes pageIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .content {
+      width: 100%;
+      max-width: 900px;
+      display: grid;
+      justify-items: center;
+    }
+
+    .cat-frame {
+      width: min(220px, 58vw);
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      margin-bottom: clamp(14px, 3vw, 24px);
+      border-radius: 50%;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(248, 217, 215, 0.34));
+      border: 1px solid var(--line);
+    }
+
+    .cat-gif {
+      width: 78%;
+      max-height: 78%;
+      object-fit: contain;
+      display: block;
+      border-radius: 18px;
+    }
+
+    .hello {
+      margin: 0 0 9px;
+      color: #a64c60;
+      font-size: clamp(0.76rem, 2vw, 0.92rem);
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      width: min(620px, 100%);
+      margin: 0;
+      color: var(--rose-dark);
+      font-family: "Fraunces", Georgia, serif;
+      font-size: clamp(2.25rem, 6.6vw, 4.1rem);
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      gap: clamp(12px, 4vw, 24px);
+      width: 100%;
+      margin-top: clamp(28px, 5vw, 44px);
+    }
+
+    .gift-button {
+      min-width: clamp(132px, 23vw, 174px);
+      min-height: 48px;
+      padding: 0 22px;
+      border-radius: 16px;
+      font-size: clamp(0.74rem, 1.8vw, 0.86rem);
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+    }
+
+    .gift-button.primary {
+      color: #fffafa;
+      background: #bd5369;
+      border: 1px solid #bd5369;
+      box-shadow: 0 14px 28px rgba(189, 83, 105, 0.2);
+    }
+
+    .gift-button.secondary {
+      color: #9b4658;
+      background: rgba(255, 255, 255, 0.62);
+      border: 1px solid rgba(155, 70, 88, 0.26);
+      box-shadow: 0 12px 22px rgba(123, 44, 61, 0.08);
+    }
+
+    .gift-button.primary:hover {
+      background: #a8465a;
+      transform: translateY(-2px);
+      box-shadow: 0 18px 34px rgba(189, 83, 105, 0.24);
+    }
+
+    .gift-button.secondary:hover {
+      background: rgba(255, 255, 255, 0.84);
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      z-index: 3;
+      width: min(360px, calc(100vw - 32px));
+      padding: 13px 18px;
+      color: var(--rose-dark);
+      text-align: center;
+      font-size: 0.88rem;
+      font-weight: 800;
+      background: rgba(255, 250, 250, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 18px 36px rgba(123, 44, 61, 0.13);
+      transform: translate(-50%, 18px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 220ms ease, transform 220ms ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    .hub {
+      position: relative;
+      width: min(820px, 94%);
+      min-height: min(720px, calc(100dvh - 88px));
+      place-items: start center;
+      padding: clamp(18px, 3.2vw, 36px);
+      text-align: center;
+      background:
+        radial-gradient(circle at 14% 17%, rgba(255, 250, 250, 0.64), transparent 12%),
+        radial-gradient(circle at 86% 24%, rgba(255, 250, 250, 0.42), transparent 13%),
+        linear-gradient(180deg, rgba(255, 224, 223, 0.82), rgba(255, 211, 216, 0.82));
+      border: 1px solid rgba(123, 44, 61, 0.12);
+      border-radius: 30px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      animation: pageIn 580ms ease both;
+      overflow: hidden;
+    }
+
+    .hub-decor {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .hub-decor span {
+      position: absolute;
+      display: block;
+      opacity: 0.42;
+    }
+
+    .hub-decor .dot {
+      width: 7px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: #c45d70;
+      box-shadow: 18px 12px 0 rgba(196, 93, 112, 0.26), -16px 26px 0 rgba(196, 93, 112, 0.18);
+    }
+
+    .hub-decor .leaf {
+      width: 36px;
+      height: 18px;
+      border-radius: 999px 999px 999px 0;
+      border: 2px solid rgba(155, 53, 73, 0.26);
+      transform: rotate(var(--r));
+    }
+
+    .hub-decor .tiny-heart {
+      color: rgba(196, 93, 112, 0.48);
+      font-family: Georgia, serif;
+      font-size: 1.2rem;
+      animation: floatHeart 5.4s ease-in-out infinite;
+    }
+
+    .hub-decor .ribbon {
+      left: 50%;
+      bottom: 9%;
+      width: min(360px, 74%);
+      height: 48px;
+      border-bottom: 2px dashed rgba(155, 53, 73, 0.16);
+      border-radius: 0 0 50% 50%;
+      transform: translateX(-50%);
+      opacity: 0.72;
+    }
+
+    .hub-decor .one {
+      left: 12%;
+      top: 42%;
+    }
+
+    .hub-decor .two {
+      right: 14%;
+      top: 37%;
+      --r: -24deg;
+    }
+
+    .hub-decor .three {
+      left: 18%;
+      bottom: 21%;
+      --r: 18deg;
+    }
+
+    .hub-decor .four {
+      right: 19%;
+      bottom: 22%;
+      animation-delay: -2.1s;
+    }
+
+    .hub-decor .five {
+      left: 46%;
+      bottom: 14%;
+    }
+
+    .hub::before,
+    .hub::after {
+      content: "✧";
+      position: absolute;
+      color: rgba(196, 93, 112, 0.42);
+      font-family: Georgia, serif;
+      font-size: clamp(1.2rem, 3vw, 2rem);
+      animation: twinkle 3.8s ease-in-out infinite;
+    }
+
+    .hub::before {
+      left: 11%;
+      top: 17%;
+    }
+
+    .hub::after {
+      right: 13%;
+      bottom: 14%;
+      animation-delay: -1.8s;
+    }
+
+    @keyframes twinkle {
+      0%,
+      100% {
+        opacity: 0.28;
+        transform: scale(0.92) rotate(0deg);
+      }
+
+      50% {
+        opacity: 0.68;
+        transform: scale(1.08) rotate(8deg);
+      }
+    }
+
+    .hub-title {
+      margin: 0;
+      color: #9b3549;
+      font-family: "Inter", system-ui, sans-serif;
+      font-size: clamp(1.95rem, 4vw, 3.2rem);
+      line-height: 1.05;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .hub .content {
+      position: relative;
+    }
+
+    .hub .content::before,
+    .hub .content::after {
+      content: "♥";
+      position: absolute;
+      color: rgba(196, 93, 112, 0.32);
+      font-size: clamp(0.9rem, 2.4vw, 1.3rem);
+      pointer-events: none;
+      animation: floatHeart 5.2s ease-in-out infinite;
+    }
+
+    .hub .content::before {
+      left: 2%;
+      bottom: -18%;
+      transform: rotate(-12deg);
+    }
+
+    .hub .content::after {
+      right: 5%;
+      top: 44%;
+      transform: rotate(15deg);
+      animation-delay: -2s;
+    }
+
+    .hub-subtitle {
+      margin: 8px 0 28px;
+      color: #a64c60;
+      font-size: clamp(0.76rem, 1.8vw, 0.9rem);
+      font-weight: 700;
+    }
+
+    .gift-grid {
+      width: 100%;
+      max-width: 760px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: clamp(22px, 6vw, 48px);
+      margin: clamp(12px, 3vw, 24px) auto 0;
+      align-items: center;
+      justify-items: center;
+      padding: 0 12px;
+    }
+
+    .gift-card {
+      display: grid;
+      place-items: center;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      cursor: pointer;
+      overflow: visible;
+      transition: transform 180ms ease, filter 180ms ease;
+    }
+
+    .gift-card:hover {
+      transform: translateY(-3px);
+      background: transparent;
+      box-shadow: none;
+      filter: brightness(1.03);
+    }
+
+    .gift-card:active {
+      transform: translateY(0) scale(0.97);
+    }
+
+    .gift-card img {
+      width: min(205px, 100%);
+      height: auto;
+      max-height: min(190px, 72vw);
+      object-fit: contain;
+      display: block;
+      animation: iconFloat 4.8s ease-in-out infinite;
+    }
+
+    .gift-card:nth-child(2) img {
+      animation-delay: -1.1s;
+    }
+
+    .gift-card:nth-child(3) img {
+      animation-delay: -2.2s;
+    }
+
+    .gift-card:nth-child(4) img {
+      animation-delay: -3.1s;
+    }
+
+    @keyframes iconFloat {
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-5px);
+      }
+    }
+
+    .gift-card .flower-icon {
+      width: min(205px, 100%);
+      max-height: min(190px, 72vw);
+    }
+
+    .gift-grid .gift-card:nth-child(4) img {
+      width: min(235px, 100%);
+      max-height: min(220px, 72vw);
+    }
+
+    /* Nudge the cake image down slightly so its caption reads lower */
+    .gift-grid .gift-card:nth-child(3) img {
+      transform: translateY(14px);
+    }
+
+    /* Desktop: keep 2x2 layout but tighten spacing and size */
+    @media (min-width: 900px) {
+      .gift-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: clamp(24px, 3.2vw, 48px);
+        padding: 0 28px;
+      }
+
+      .gift-card img {
+        width: min(220px, 100%);
+        max-height: min(220px, 36vw);
+      }
+
+      .gift-grid .gift-card:nth-child(4) img {
+        width: min(260px, 100%);
+        max-height: min(260px, 36vw);
+      }
+    }
+
+    .memories {
+      position: relative;
+      width: 100%;
+      min-height: 100dvh;
+      place-items: center;
+      padding: 0;
+      text-align: center;
+      background: #ffd9d8;
+      border: 0;
+      box-shadow: none;
+      animation: pageIn 580ms ease both;
+    }
+
+    .memories::before,
+    .memories::after,
+    .cake::before,
+    .cake::after,
+    .letter::before,
+    .letter::after {
+      content: "";
+      position: absolute;
+      top: 8%;
+      bottom: 8%;
+      width: min(210px, 20vw);
+      pointer-events: none;
+      opacity: 0.35;
+      background:
+        radial-gradient(circle at 28% 14%, rgba(196, 93, 112, 0.24) 0 6px, transparent 7px),
+        radial-gradient(circle at 64% 29%, rgba(196, 93, 112, 0.16) 0 5px, transparent 6px),
+        radial-gradient(circle at 34% 47%, rgba(196, 93, 112, 0.2) 0 8px, transparent 9px),
+        radial-gradient(circle at 70% 66%, rgba(196, 93, 112, 0.14) 0 6px, transparent 7px),
+        radial-gradient(circle at 42% 84%, rgba(196, 93, 112, 0.18) 0 7px, transparent 8px);
+      animation: vineBreathe 7.5s ease-in-out infinite;
+    }
+
+    .memories::before,
+    .cake::before,
+    .letter::before {
+      left: 2%;
+    }
+
+    .memories::after,
+    .cake::after,
+    .letter::after {
+      right: 2%;
+      transform: scaleX(-1);
+      animation-delay: -3s;
+    }
+
+    .memory-scene {
+      position: relative;
+      width: min(100vw, calc(100dvh * 1.75), 930px);
+      aspect-ratio: 744 / 425;
+      overflow: hidden;
+      background: #ffd9d8;
+    }
+
+    .memory-title {
+      position: absolute;
+      left: 50%;
+      bottom: 2.7%;
+      margin: 0;
+      color: #c45d70;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: clamp(1rem, 2.7vw, 1.45rem);
+      font-weight: 800;
+      font-style: italic;
+      line-height: 1;
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
+
+    .memory-arrow {
+      position: absolute;
+      left: 24.5%;
+      bottom: 14%;
+      width: 9%;
+      color: #cf6477;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: clamp(0.64rem, 1.7vw, 0.9rem);
+      font-style: italic;
+      font-weight: 700;
+      transform: rotate(-8deg);
+    }
+
+    .memory-arrow::before {
+      content: "↝";
+      position: absolute;
+      left: 100%;
+      bottom: 72%;
+      font-size: clamp(1.2rem, 4vw, 2.3rem);
+      transform: rotate(-38deg);
+    }
+
+    .memory-card {
+      position: absolute;
+      width: var(--w);
+      aspect-ratio: 514 / 619;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      filter: drop-shadow(0 10px 12px rgba(123, 44, 61, 0.18));
+      transform: rotate(var(--r));
+      transition: transform 180ms ease, filter 180ms ease;
+    }
+
+    .memory-card:hover {
+      filter: drop-shadow(0 14px 16px rgba(123, 44, 61, 0.22));
+      transform: rotate(var(--r)) translateY(-3px);
+    }
+
+    .memory-photo {
+      position: absolute;
+      left: 6.6%;
+      top: 6.3%;
+      width: 86.8%;
+      height: 72.7%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .memory-frame {
+      position: absolute;
+      left: -21.4%;
+      top: -60.6%;
+      width: 143.2%;
+      height: auto;
+      pointer-events: none;
+    }
+
+    .memory-card.one {
+      left: 17.5%;
+      top: 5.2%;
+      --w: 16.5%;
+      --r: 8deg;
+    }
+
+    .memory-card.two {
+      left: 3%;
+      top: 42%;
+      --w: 17%;
+      --r: -6deg;
+    }
+
+    .memory-card.three {
+      left: 40.5%;
+      top: 8%;
+      --w: 12%;
+      --r: 0deg;
+    }
+
+    .memory-card.four {
+      right: 4.2%;
+      top: 8.8%;
+      --w: 16.6%;
+      --r: -3deg;
+    }
+
+    .memory-card.five {
+      right: 21.4%;
+      top: 43.5%;
+      --w: 17.2%;
+      --r: 5deg;
+    }
+
+    .memory-card.six {
+      left: 57%;
+      top: 7%;
+      --w: 12%;
+      --r: 2deg;
+    }
+
+    .memory-card.seven {
+      left: 35%;
+      top: 42%;
+      --w: 12%;
+      --r: -2deg;
+    }
+
+    .memory-card.eight {
+      right: 39%;
+      top: 30%;
+      --w: 11.5%;
+      --r: 1deg;
+    }
+
+    .memory-back {
+      position: absolute;
+      left: 2%;
+      top: 2%;
+      width: clamp(34px, 5.3vw, 48px);
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      padding: 7px;
+      background: rgba(255, 250, 250, 0.68);
+      border: 1px solid rgba(188, 91, 110, 0.18);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 8px 16px rgba(123, 44, 61, 0.1);
+    }
+
+    .memory-back img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      opacity: 0.72;
+    }
+
+    .photo-viewer {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: none;
+      place-items: center;
+      padding: 24px;
+      background: rgba(93, 36, 49, 0.54);
+      backdrop-filter: blur(10px);
+    }
+
+    .photo-viewer.open {
+      display: grid;
+    }
+
+    .photo-viewer img {
+      max-width: min(92vw, 940px);
+      max-height: 86dvh;
+      object-fit: contain;
+      border-radius: 18px;
+      box-shadow: 0 22px 60px rgba(43, 15, 22, 0.32);
+    }
+
+    .viewer-close {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      width: 42px;
+      aspect-ratio: 1;
+      border: 1px solid rgba(255, 250, 250, 0.52);
+      border-radius: 50%;
+      color: #fffafa;
+      background: rgba(93, 36, 49, 0.34);
+      font-size: 1.6rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .cake {
+      position: relative;
+      width: 100%;
+      min-height: 100dvh;
+      place-items: center;
+      padding: 0;
+      text-align: center;
+      background: linear-gradient(180deg, #ffe8e7 0%, #ffd4d7 100%);
+      border: 0;
+      box-shadow: none;
+      animation: pageIn 580ms ease both;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .cake-scene {
+      position: relative;
+      width: min(100vw, 930px);
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: clamp(18px, 4vw, 34px);
+      overflow: hidden;
+    }
+
+    .cake-card {
+      position: relative;
+      z-index: 1;
+      width: min(620px, calc(100vw - 32px));
+      height: min(560px, calc(100dvh - 32px), calc(100vw * 0.53));
+      min-height: 370px;
+      display: grid;
+      justify-items: center;
+      align-content: center;
+      gap: clamp(10px, 2.4dvh, 20px);
+      padding: clamp(16px, 4vw, 30px);
+      background: rgba(255, 250, 250, 0.46);
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      border-radius: 28px;
+      box-shadow: 0 24px 70px rgba(123, 44, 61, 0.14);
+      backdrop-filter: blur(12px);
+    }
+
+    .cake-stage {
+      position: relative;
+      width: min(330px, 68vw);
+      aspect-ratio: 736 / 760;
+      display: grid;
+      place-items: center;
+      filter: drop-shadow(0 22px 32px rgba(123, 44, 61, 0.16));
+    }
+
+    .cake-image {
+      width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .candles {
+      position: absolute;
+      top: 16%;
+      left: 50%;
+      z-index: 2;
+      width: 49%;
+      display: flex;
+      justify-content: space-between;
+      transform: translateX(-50%);
+      opacity: 0.96;
+    }
+
+    .candle {
+      position: relative;
+      width: 16px;
+      height: 40px;
+      border-radius: 8px;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .flame {
+      position: absolute;
+      left: 50%;
+      top: -8px;
+      width: 20px;
+      height: 30px;
+      border-radius: 50% 50% 45% 45%;
+      background: radial-gradient(circle at 50% 68%, #fff8b8 0 20%, #ffb24a 42%, #f06a73 76%);
+      opacity: 0;
+      filter: drop-shadow(0 0 12px rgba(255, 154, 64, 0.68));
+      transform: translateX(-50%) scale(0.2);
+      transform-origin: center bottom;
+    }
+
+    .cake.lit .flame {
+      opacity: 1;
+      animation: flicker 420ms ease-in-out infinite alternate;
+    }
+
+    .cake.blown .flame {
+      opacity: 0;
+      animation: none;
+    }
+
+    @keyframes flicker {
+      from {
+        transform: translateX(-50%) scale(0.92) rotate(-4deg);
+      }
+
+      to {
+        transform: translateX(-50%) scale(1.08) rotate(4deg);
+      }
+    }
+
+    .cake-control {
+      width: min(390px, 100%);
+      display: grid;
+      gap: 10px;
+      justify-items: center;
+    }
+
+    .cake.blown .cake-control {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .cake-instruction {
+      min-height: 22px;
+      margin: 0;
+      color: #9b4658;
+      font-size: clamp(0.82rem, 2.4vw, 1rem);
+      font-weight: 800;
+    }
+
+    .birthday-message {
+      min-height: 64px;
+      display: grid;
+      place-items: center;
+      margin: clamp(14px, 3dvh, 32px) 0 0;
+      color: #9b3549;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: clamp(1.35rem, 5.2vw, 2.7rem);
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: 0;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 360ms ease, transform 360ms ease;
+    }
+
+    .cake.blown .birthday-message {
+      opacity: 1;
+      transform: translateY(46px);
+    }
+
+    .cake-hearts {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .cake-heart {
+      position: absolute;
+      top: -42px;
+      left: var(--x);
+      color: #c96a7c;
+      font-size: var(--size);
+      opacity: var(--alpha);
+      animation: heartDrop var(--speed) linear forwards;
+      transform: rotate(var(--tilt));
+    }
+
+    @keyframes heartDrop {
+      to {
+        transform: translateY(calc(100dvh + 70px)) rotate(calc(var(--tilt) + 120deg));
+        opacity: 0;
+      }
+    }
+
+    .letter {
+      position: relative;
+      width: 100%;
+      min-height: 100dvh;
+      place-items: center;
+      padding: 0;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(255, 250, 250, 0.5), transparent 38%),
+        linear-gradient(180deg, #ffe1df, #ffd1d5);
+      overflow: hidden;
+      animation: pageIn 580ms ease both;
+    }
+
+    .letter-scene {
+      position: relative;
+      width: min(100vw, 930px);
+      aspect-ratio: 744 / 425;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .flower-wreath {
+      position: absolute;
+      inset: 0 12%;
+      opacity: 0.72;
+      filter: blur(0.1px);
+      pointer-events: none;
+    }
+
+    .flower-wreath span {
+      position: absolute;
+      width: clamp(46px, 8vw, 76px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(255, 250, 250, 0.9) 0 17%, transparent 18%),
+        radial-gradient(circle at 35% 35%, rgba(219, 132, 142, 0.56) 0 18%, transparent 19%),
+        radial-gradient(circle at 68% 34%, rgba(244, 176, 175, 0.58) 0 18%, transparent 19%),
+        radial-gradient(circle at 34% 70%, rgba(244, 176, 175, 0.56) 0 18%, transparent 19%),
+        radial-gradient(circle at 70% 70%, rgba(219, 132, 142, 0.5) 0 18%, transparent 19%);
+      animation: flowerSway 6s ease-in-out infinite;
+    }
+
+    .flower-wreath span:nth-child(1) {
+      left: 14%;
+      top: 3%;
+    }
+
+    .flower-wreath span:nth-child(2) {
+      left: 30%;
+      top: -2%;
+      animation-delay: -1.3s;
+    }
+
+    .flower-wreath span:nth-child(3) {
+      right: 23%;
+      top: 2%;
+      animation-delay: -2.1s;
+    }
+
+    .flower-wreath span:nth-child(4) {
+      left: 14%;
+      bottom: 5%;
+      animation-delay: -2.8s;
+    }
+
+    .flower-wreath span:nth-child(5) {
+      left: 39%;
+      bottom: -1%;
+      animation-delay: -3.4s;
+    }
+
+    .flower-wreath span:nth-child(6) {
+      right: 17%;
+      bottom: 4%;
+      animation-delay: -4.2s;
+    }
+
+    .letter-envelope {
+      position: absolute;
+      z-index: 2;
+      width: min(430px, 58vw);
+      aspect-ratio: 1.62;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      filter: drop-shadow(0 24px 36px rgba(123, 44, 61, 0.2));
+      transform: translateY(10px) rotate(-1deg);
+      transition: transform 420ms ease, opacity 320ms ease, filter 320ms ease;
+    }
+
+    .letter-envelope:hover {
+      filter: drop-shadow(0 28px 40px rgba(123, 44, 61, 0.24));
+      transform: translateY(2px) rotate(-1deg);
+    }
+
+    .letter-envelope-body {
+      position: absolute;
+      inset: 18% 0 0;
+      overflow: hidden;
+      border-radius: 8px;
+      background:
+        linear-gradient(142deg, transparent 49.7%, rgba(188, 91, 110, 0.12) 50%, transparent 50.7%),
+        linear-gradient(218deg, transparent 49.7%, rgba(188, 91, 110, 0.12) 50%, transparent 50.7%),
+        linear-gradient(180deg, #fffafa, #ffe6e7);
+      border: 1px solid rgba(188, 91, 110, 0.16);
+    }
+
+    .letter-envelope-body::before,
+    .letter-envelope-body::after {
+      content: "";
+      position: absolute;
+      bottom: -1px;
+      width: 51%;
+      height: 82%;
+      background: rgba(255, 235, 236, 0.78);
+      border-top: 1px solid rgba(188, 91, 110, 0.14);
+    }
+
+    .letter-envelope-body::before {
+      left: 0;
+      clip-path: polygon(0 0, 100% 100%, 0 100%);
+    }
+
+    .letter-envelope-body::after {
+      right: 0;
+      clip-path: polygon(100% 0, 100% 100%, 0 100%);
+    }
+
+    .letter-flap {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 18%;
+      height: 58%;
+      background: linear-gradient(180deg, #fff7f6, #ffdfe2);
+      border: 1px solid rgba(188, 91, 110, 0.15);
+      clip-path: polygon(0 0, 100% 0, 50% 100%);
+      transform-origin: top;
+      transition: transform 680ms cubic-bezier(0.2, 0.7, 0.2, 1);
+    }
+
+    .envelope-heart {
+      position: absolute;
+      left: 50%;
+      top: 58%;
+      color: #c45d70;
+      font-size: clamp(1.3rem, 3vw, 1.7rem);
+      transform: translate(-50%, -50%);
+    }
+
+    .letter.opening .letter-envelope {
+      pointer-events: none;
+    }
+
+    .letter.opening .letter-flap {
+      transform: rotateX(155deg);
+    }
+
+    .letter.open .letter-envelope {
+      pointer-events: none;
+      transform: translateY(24px) rotate(-1deg) scale(0.96);
+    }
+
+    .letter.open .letter-flap {
+      transform: rotateX(0deg);
+    }
+
+    .letter.open.ready .letter-envelope {
+      opacity: 0;
+      transform: translateY(40px) rotate(-1deg) scale(0.9);
+      transition-delay: 260ms;
+    }
+
+    .letter-paper {
+      position: absolute;
+      z-index: 1;
+      width: min(560px, 72vw);
+      min-height: 310px;
+      padding: clamp(28px, 4vw, 40px) clamp(36px, 5vw, 58px);
+      color: #7b2c3d;
+      text-align: left;
+      background:
+        radial-gradient(circle at 10% 12%, rgba(217, 111, 134, 0.05) 0 18px, transparent 19px),
+        radial-gradient(circle at 88% 20%, rgba(217, 111, 134, 0.05) 0 22px, transparent 23px),
+        linear-gradient(180deg, rgba(255, 250, 250, 0.96), rgba(255, 247, 246, 0.96));
+      border: 1px solid rgba(123, 44, 61, 0.1);
+      border-radius: 4px;
+      box-shadow: 0 24px 48px rgba(123, 44, 61, 0.22);
+      opacity: 0;
+      transform: translateY(70px) scale(0.58) rotate(-1deg);
+      pointer-events: none;
+      transition: opacity 260ms ease, transform 820ms cubic-bezier(0.18, 0.74, 0.24, 1);
+    }
+
+    .letter-paper::before,
+    .letter-paper::after {
+      content: "♥";
+      position: absolute;
+      color: rgba(196, 93, 112, 0.18);
+      font-size: 1.1rem;
+    }
+
+    .letter-paper::before {
+      left: 18px;
+      bottom: 16px;
+      transform: rotate(-14deg);
+    }
+
+    .letter-paper::after {
+      right: 20px;
+      top: 18px;
+      transform: rotate(12deg);
+    }
+
+    .letter.opening .letter-paper {
+      opacity: 0.9;
+      transform: translateY(-76px) scale(0.62) rotate(-0.7deg);
+      transition-delay: 220ms;
+    }
+
+    .letter.open .letter-paper {
+      opacity: 0.98;
+      transform: translateY(-104px) scale(0.72) rotate(-0.45deg);
+      transition-delay: 0ms;
+    }
+
+    .letter.open.ready .letter-paper {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0) scale(1) rotate(-0.35deg);
+      transition-delay: 140ms;
+    }
+
+    .letter-paper h2 {
+      margin: 0 0 16px;
+      color: #c45d70;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: clamp(1.25rem, 3vw, 1.62rem);
+      font-weight: 800;
+      font-style: italic;
+    }
+
+    .letter-paper p {
+      margin: 0 0 11px;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: clamp(0.76rem, 1.75vw, 0.95rem);
+      font-style: italic;
+      font-weight: 700;
+      line-height: 1.42;
+    }
+
+    .letter-sign {
+      display: block;
+      margin-top: 12px;
+      text-align: right;
+      color: #b25267;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: clamp(0.78rem, 1.8vw, 0.96rem);
+      font-style: italic;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+
+    .letter-back {
+      position: absolute;
+      left: clamp(10px, 3vw, 22px);
+      top: clamp(10px, 3vw, 22px);
+      width: clamp(40px, 8vw, 54px);
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      padding: 8px;
+      border: 1px solid rgba(188, 91, 110, 0.18);
+      border-radius: 50%;
+      background: rgba(255, 250, 250, 0.72);
+      box-shadow: 0 8px 16px rgba(123, 44, 61, 0.1);
+      cursor: pointer;
+    }
+
+    .letter-back img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      opacity: 0.72;
+    }
+
+    @keyframes paperSettle {
+      from {
+        opacity: 0;
+        transform: translateY(14px) rotate(-1.8deg);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) rotate(-0.4deg);
+      }
+    }
+
+    @keyframes flowerSway {
+      0%,
+      100% {
+        transform: translateY(0) rotate(-3deg);
+      }
+
+      50% {
+        transform: translateY(7px) rotate(4deg);
+      }
+    }
+
+    .bouquet {
+      width: 100%;
+      min-height: max(100dvh, 425px);
+      place-items: center;
+      padding: 0;
+      text-align: center;
+      background: #ffd9d8;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      animation: pageIn 580ms ease both;
+    }
+
+    .bouquet-scene {
+      position: relative;
+      width: min(100vw, 930px);
+      aspect-ratio: 744 / 425;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .bouquet-title {
+      position: absolute;
+      top: 1%;
+      left: 50%;
+      margin: 0;
+      color: #bb5d71;
+      font-family: "Inter", system-ui, sans-serif;
+      font-size: clamp(1.5rem, 4.15vw, 2.35rem);
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-shadow: 0 2px 2px rgba(123, 44, 61, 0.16);
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
+
+    .bouquet-card {
+      position: absolute;
+      left: 25.8%;
+      top: 10%;
+      width: 45.2%;
+      height: 76%;
+      display: grid;
+      place-items: center;
+      background: #ffa1b3;
+      border: 3px solid rgba(188, 91, 110, 0.28);
+      border-radius: 18px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+    }
+
+    .bouquet-image {
+      width: 92%;
+      max-height: 94%;
+      object-fit: contain;
+      filter: drop-shadow(0 18px 26px rgba(123, 44, 61, 0.16));
+    }
+
+    .home-back {
+      position: absolute;
+      left: 50%;
+      bottom: 2.2%;
+      width: clamp(54px, 8vw, 72px);
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      padding: 9px;
+      background: rgba(255, 250, 250, 0.9);
+      border: 2px solid rgba(188, 91, 110, 0.22);
+      border-radius: 50%;
+      box-shadow: 0 10px 18px rgba(123, 44, 61, 0.14);
+      cursor: pointer;
+      transform: translateX(-50%);
+      transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+    }
+
+    .home-back:hover {
+      background: #fffafa;
+      box-shadow: 0 14px 24px rgba(123, 44, 61, 0.18);
+      transform: translateX(-50%) translateY(-2px);
+    }
+
+    .home-back img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      opacity: 0.78;
+    }
+
+    .note {
+      position: absolute;
+      width: clamp(174px, 24vw, 255px);
+      min-height: 58px;
+      display: grid;
+      place-items: center;
+      padding: 10px 16px;
+      color: #9b4658;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: clamp(0.78rem, 1.45vw, 0.94rem);
+      font-weight: 700;
+      font-style: italic;
+      line-height: 1.28;
+      text-align: left;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      white-space: normal;
+      background: rgba(255, 250, 250, 0.86);
+      border: 2px solid rgba(188, 91, 110, 0.14);
+      border-radius: 14px;
+      box-shadow: 0 6px 14px rgba(123, 44, 61, 0.1);
+    }
+
+    .note.one {
+      top: 18%;
+      left: 2.8%;
+    }
+
+    .note.two {
+      top: 18%;
+      right: 6.2%;
+    }
+
+    .note.three {
+      top: 48.5%;
+      left: 2.5%;
+      right: auto;
+    }
+
+    .note.four {
+      top: 48.5%;
+      right: 2.5%;
+      left: auto;
+    }
+
+    .note.five {
+      bottom: 6.5%;
+      left: 3%;
+    }
+
+    .note.six {
+      right: 6.3%;
+      bottom: 6.5%;
+    }
+
+    @media (max-width: 520px) {
+      .invitation {
+        min-height: calc(100dvh - 36px);
+        border-radius: 28px;
+      }
+
+      .hub {
+        min-height: calc(100dvh - 36px);
+        border-radius: 28px;
+      }
+
+      .actions {
+        gap: 10px;
+      }
+
+      .gift-button {
+        min-width: 132px;
+        padding: 0 14px;
+      }
+
+      .gift-grid {
+        gap: 12px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .gift-card img {
+        width: min(160px, 44vw);
+        max-height: min(160px, 44vw);
+      }
+
+      .memories {
+        min-height: 100dvh;
+      }
+
+      .memory-scene {
+        width: 100vw;
+        min-height: 100dvh;
+        aspect-ratio: auto;
+      }
+
+      .memory-title {
+        bottom: 2.5%;
+        font-size: clamp(1.05rem, 6vw, 1.55rem);
+      }
+
+      .memory-arrow {
+        left: 11%;
+        bottom: 13%;
+        width: 28%;
+        font-size: clamp(0.72rem, 3.5vw, 0.95rem);
+      }
+
+      .memory-card.one {
+        left: 27%;
+        top: 5%;
+        --w: 31%;
+      }
+
+      .memory-card.two {
+        left: 5%;
+        top: 29%;
+        --w: 32%;
+      }
+
+      .memory-card.three {
+        left: 44%;
+        top: 28%;
+        --w: 26%;
+      }
+
+      .memory-card.four {
+        right: 5%;
+        top: 9%;
+        --w: 31%;
+      }
+
+      .memory-card.five {
+        right: 8%;
+        top: 54%;
+        --w: 33%;
+      }
+
+      .memory-card.six {
+        left: 60%;
+        top: 33%;
+        --w: 27%;
+      }
+
+      .memory-card.seven {
+        left: 18%;
+        top: 54%;
+        --w: 28%;
+      }
+
+      .memory-card.eight {
+        left: 39%;
+        top: 8%;
+        --w: 25%;
+      }
+
+      .cake-card {
+        height: min(620px, calc(100dvh - 28px));
+        min-height: 0;
+        padding: 16px;
+        border-radius: 22px;
+      }
+
+      .cake-stage {
+        width: min(280px, 78vw);
+      }
+
+      .candle {
+        width: 12px;
+        height: 44px;
+      }
+
+      .flame {
+        width: 16px;
+        height: 24px;
+        top: -8px;
+      }
+
+      .cake.blown .birthday-message {
+        transform: translateY(24px);
+      }
+
+      .letter {
+        padding: 0;
+      }
+
+      .letter-scene {
+        width: 100vw;
+        min-height: 100dvh;
+        aspect-ratio: auto;
+      }
+
+      .flower-wreath {
+        inset: 9% 0;
+      }
+
+      .letter-envelope {
+        width: min(330px, calc(100vw - 42px));
+      }
+
+      .letter-paper {
+        width: min(360px, calc(100vw - 28px));
+        min-height: 390px;
+        padding: 30px 28px;
+      }
+
+      .letter-paper p {
+        font-size: clamp(0.72rem, 3.35vw, 0.86rem);
+      }
+
+      .bouquet-title {
+        font-size: clamp(1rem, 5.5vw, 1.45rem);
+        white-space: normal;
+        width: min(88%, 320px);
+      }
+
+      .bouquet-scene {
+        width: 100vw;
+        min-height: 100dvh;
+        aspect-ratio: auto;
+        padding: clamp(12px, 4vw, 18px);
+      }
+
+      .bouquet-card {
+        left: 50%;
+        top: 20%;
+        width: 72%;
+        height: auto;
+        min-height: 0;
+        transform: translateX(-50%);
+      }
+
+      .bouquet-image {
+        width: 100%;
+        max-height: none;
+      }
+
+      .note {
+        width: clamp(34vw, 36vw, 44vw);
+        min-height: 42px;
+        padding: 8px 10px;
+        font-size: clamp(0.52rem, 2.5vw, 0.8rem);
+        border-radius: 12px;
+        transform-origin: center;
+      }
+
+      .note.one {
+        top: 15%;
+        left: 5%;
+        transform: rotate(-3deg);
+      }
+
+      .note.two {
+        top: 14%;
+        right: 8%;
+        transform: rotate(4deg);
+      }
+
+      .note.three {
+        top: 39%;
+        left: 10%;
+        width: 40vw;
+        transform: rotate(2.5deg);
+      }
+
+      .note.four {
+        top: 44%;
+        right: 7%;
+        width: 38vw;
+        transform: rotate(-2.5deg);
+      }
+
+      .note.five {
+        bottom: 20%;
+        left: 12%;
+        width: 36vw;
+        transform: rotate(3deg);
+      }
+
+      .note.six {
+        bottom: 16%;
+        right: 10%;
+        width: 42vw;
+        transform: rotate(-4deg);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 1ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="heart-field" aria-hidden="true">
+    <span class="heart" style="left: 7%; top: 18%; --size: 20px; --alpha: 0.34; --speed: 5.8s; --delay: -0.4s; --tilt: -14deg;"></span>
+    <span class="heart" style="left: 18%; top: 78%; --size: 16px; --alpha: 0.22; --speed: 6.3s; --delay: -1.4s; --tilt: 10deg;"></span>
+    <span class="heart" style="left: 72%; top: 12%; --size: 18px; --alpha: 0.24; --speed: 5.4s; --delay: -2.1s; --tilt: 16deg;"></span>
+    <span class="heart" style="left: 86%; top: 72%; --size: 22px; --alpha: 0.26; --speed: 6.8s; --delay: -3s; --tilt: -10deg;"></span>
+    <span class="soft-bloom" style="left: 10%; top: 58%; --size: 18px; --alpha: 0.28; --speed: 7s; --delay: -0.8s; --tilt: 18deg;"></span>
+    <span class="soft-bloom" style="left: 91%; top: 25%; --size: 15px; --alpha: 0.22; --speed: 6.4s; --delay: -2.2s; --tilt: -22deg;"></span>
+    <span class="soft-bloom" style="left: 62%; top: 86%; --size: 16px; --alpha: 0.2; --speed: 7.4s; --delay: -3.4s; --tilt: 34deg;"></span>
+    <span class="edge-vine left"></span>
+    <span class="edge-vine right"></span>
+    <span class="paper-bit" style="left: 5%; top: 36%; --w: 42px; --alpha: 0.28; --r: -18deg; --speed: 6.4s; --delay: -1s;"></span>
+    <span class="paper-bit" style="right: 6%; top: 48%; --w: 38px; --alpha: 0.22; --r: 16deg; --speed: 7.1s; --delay: -2.5s;"></span>
+    <span class="paper-bit" style="left: 16%; bottom: 12%; --w: 32px; --alpha: 0.2; --r: 12deg; --speed: 6.8s; --delay: -3.2s;"></span>
+    <span class="paper-bit" style="right: 18%; bottom: 16%; --w: 34px; --alpha: 0.22; --r: -12deg; --speed: 7.4s; --delay: -4s;"></span>
+  </div>
+
+  <main class="page">
+    <section class="invitation screen active" id="pageOne" aria-labelledby="giftTitle">
+      <div class="content">
+        <div class="cat-frame">
+          <img class="cat-gif" src="5879ecf3e80a04ca4e8ea49975b43494.gif" alt="Cute cat">
+        </div>
+
+        <p class="hello">HII BBGGGG HAPPIEST BIRTHDAY <3</p>
+        <h1 id="giftTitle">Do you want to see your gift?</h1>
+
+        <div class="actions" aria-label="Gift answer choices">
+          <button class="gift-button primary" id="yesButton" type="button">YES PLEASE</button>
+          <button class="gift-button secondary" id="noButton" type="button">NO, FUCK YOU</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="hub screen" id="pageTwo" aria-labelledby="hubTitle">
+      <div class="hub-decor" aria-hidden="true">
+        <span class="dot one"></span>
+        <span class="leaf two"></span>
+        <span class="leaf three"></span>
+        <span class="tiny-heart four">♥</span>
+        <span class="tiny-heart five">♡</span>
+        <span class="ribbon"></span>
+      </div>
+      <div class="content">
+        <h2 class="hub-title" id="hubTitle">A WHOLE LOT OF GIFTSSSSS</h2>
+        <p class="hub-subtitle">Tap an image to open your surprise ♡</p>
+
+        <div class="gift-grid" aria-label="Surprise choices">
+          <button class="gift-card" type="button" aria-label="Open captured memories">
+            <img src="page_2_images/camera.png" alt="">
+          </button>
+          <button class="gift-card" type="button" aria-label="Open love letter">
+            <img src="page_2_images/letter_icon.png" alt="">
+          </button>
+          <button class="gift-card" type="button" aria-label="Open birthday cake surprise">
+            <img src="page_2_images/cake_icon.png" alt="">
+          </button>
+          <button class="gift-card" type="button" aria-label="Open flowers">
+            <img class="flower-icon" src="page_2_images/flower_icon.png" alt="">
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="memories screen" id="memoriesPage" aria-labelledby="memoriesTitle">
+      <div class="memory-scene">
+        <button class="memory-back" id="memoryBackButton" type="button" aria-label="Back to gifts">
+          <img src="https://static.thenounproject.com/png/cottage-icon-8213839-512.png" alt="">
+        </button>
+        <button class="memory-card one" type="button" aria-label="Open memory photo">
+          <img class="memory-photo" src="screenshots/WhatsApp Image 2026-07-11 at 9.12.12 AM (1).jpeg" alt="">
+          <img class="memory-frame" src="image_box.png" alt="">
+        </button>
+        <button class="memory-card two" type="button" aria-label="Open memory photo">
+          <img class="memory-photo" src="screenshots/WhatsApp Image 2026-07-11 at 9.12.12 AM.jpeg" alt="">
+          <img class="memory-frame" src="image_box.png" alt="">
+        </button>
+        <button class="memory-card three" type="button" aria-label="Open memory photo">
+          <img class="memory-photo" src="screenshots/WhatsApp Image 2026-07-11 at 9.12.13 AM (1).jpeg" alt="">
+          <img class="memory-frame" src="image_box.png" alt="">
+        </button>
+        <button class="memory-card four" type="button" aria-label="Open memory photo">
+          <img class="memory-photo" src="screenshots/WhatsApp Image 2026-07-11 at 9.12.13 AM.jpeg" alt="">
+          <img class="memory-frame" src="image_box.png" alt="">
+        </button>
+        <button class="memory-card five" type="button" aria-label="Open memory photo">
+          <img class="memory-photo" src="screenshots/WhatsApp Image 2026-07-11 at 9.13.01 AM.jpeg" alt="">
+          <img class="memory-frame" src="image_box.png" alt="">
+        </button>
+        <button class="memory-card six" type="button" aria-label="Open memory photo">
+          <img class="memory-photo" src="screenshots/image.png" alt="">
+          <img class="memory-frame" src="image_box.png" alt="">
+        </button>
+        <button class="memory-card seven" type="button" aria-label="Open memory photo">
+          <img class="memory-photo" src="screenshots/image copy.png" alt="">
+          <img class="memory-frame" src="image_box.png" alt="">
+        </button>
+        <button class="memory-card eight" type="button" aria-label="Open memory photo">
+          <img class="memory-photo" src="screenshots/image copy 2.png" alt="">
+          <img class="memory-frame" src="image_box.png" alt="">
+        </button>
+        <p class="memory-arrow">Some very special screenshots</p>
+        <h2 class="memory-title" id="memoriesTitle">Captured memories</h2>
+      </div>
+    </section>
+
+    <section class="letter screen" id="letterPage" aria-labelledby="letterTitle">
+      <div class="letter-scene">
+        <button class="letter-back" id="letterBackButton" type="button" aria-label="Back to gifts">
+          <img src="https://static.thenounproject.com/png/cottage-icon-8213839-512.png" alt="">
+        </button>
+        <div class="flower-wreath" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <button class="letter-envelope" id="openLetterButton" type="button" aria-label="Open letter">
+          <span class="letter-envelope-body"></span>
+          <span class="letter-flap"></span>
+          <span class="envelope-heart">♥</span>
+        </button>
+        <article class="letter-paper">
+          <h2 id="letterTitle">FOR MY BIRTHDAY GIRL,</h2>
+          <p>A very happy birthday to my fav girl. May this day brings you joy and peace in life. You may not like it that much but</p>
+          <p>for me this is very special since i get to give you gifts lots of love, This is nothing compared to what you deserve, You deserve wayyyyyyyyyyyy too much than this and i really hope you make it good in life and all of your wishes come true</p>
+          <p>You really make my day better.When i dont text you my day feels incomplete. Please stay like this forever with me ♡ and at the end...Please kam khaya kar bro ek din mere ghar tak pohoch jayega tera pet.</p>
+          <span class="letter-sign">With all my love,<br>- Me ofc</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="cake screen" id="cakePage" aria-labelledby="birthdayMessage">
+      <div class="cake-scene">
+        <div class="cake-hearts" id="cakeHearts" aria-hidden="true"></div>
+        <div class="cake-card">
+          <button class="memory-back" id="cakeBackButton" type="button" aria-label="Back to gifts">
+            <img src="https://static.thenounproject.com/png/cottage-icon-8213839-512.png" alt="">
+          </button>
+
+          <div class="cake-stage" aria-hidden="true">
+            <img class="cake-image" src="cake.png" alt="">
+            <div class="candles">
+              <span class="candle"><span class="flame"></span></span>
+              <span class="candle"><span class="flame"></span></span>
+              <span class="candle"><span class="flame"></span></span>
+              <span class="candle"><span class="flame"></span></span>
+              <span class="candle"><span class="flame"></span></span>
+            </div>
+          </div>
+
+          <div class="cake-control">
+            <p class="cake-instruction" id="cakeInstruction">Blow into the mic</p>
+          </div>
+
+          <h2 class="birthday-message" id="birthdayMessage">HAPPIEST BRITHDAY TO MY FAV GIRL &lt;3</h2>
+        </div>
+      </div>
+    </section>
+
+    <section class="bouquet screen" id="bouquetPage" aria-labelledby="bouquetTitle">
+      <div class="bouquet-scene">
+        <h2 class="bouquet-title" id="bouquetTitle">A Bouquet for You</h2>
+        <div class="bouquet-card">
+          <img class="bouquet-image" src="page_2_images/flower_icon.png" alt="Bouquet of roses">
+        </div>
+        <button class="home-back" id="homeBackButton" type="button" aria-label="Back to gifts">
+          <img src="https://static.thenounproject.com/png/cottage-icon-8213839-512.png" alt="">
+        </button>
+        <p class="note one">May you always smile like this<3</p>
+        <p class="note two">FAT ASS</p>
+        <p class="note three">You deserve a lottttt more than this</p>
+        <p class="note four">Talking to you just makes my day better</p>
+        <p class="note five">I hope you gain a lottt more in life</p>
+        <p class="note six">I'VE GOT MORE FOR YOU HEHE GO BACK</p>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="photo-viewer" id="photoViewer" aria-hidden="true">
+    <button class="viewer-close" id="viewerCloseButton" type="button" aria-label="Close photo">×</button>
+    <img id="viewerImage" src="" alt="">
+  </div>
+  <audio id="song" src="music.mp3" preload="auto" loop></audio>
+
+  <script>
+    const pageOne = document.querySelector("#pageOne");
+    const pageTwo = document.querySelector("#pageTwo");
+    const memoriesPage = document.querySelector("#memoriesPage");
+    const letterPage = document.querySelector("#letterPage");
+    const cakePage = document.querySelector("#cakePage");
+    const bouquetPage = document.querySelector("#bouquetPage");
+    const yesButton = document.querySelector("#yesButton");
+    const noButton = document.querySelector("#noButton");
+    const memoryBackButton = document.querySelector("#memoryBackButton");
+    const letterBackButton = document.querySelector("#letterBackButton");
+    const openLetterButton = document.querySelector("#openLetterButton");
+    const cakeBackButton = document.querySelector("#cakeBackButton");
+    const homeBackButton = document.querySelector("#homeBackButton");
+    const cakeInstruction = document.querySelector("#cakeInstruction");
+    const cakeHearts = document.querySelector("#cakeHearts");
+    const photoViewer = document.querySelector("#photoViewer");
+    const viewerImage = document.querySelector("#viewerImage");
+    const viewerCloseButton = document.querySelector("#viewerCloseButton");
+    const song = document.querySelector("#song");
+    const toast = document.querySelector("#toast");
+    let toastTimer;
+    let audioContext;
+    let micStream;
+    let analyser;
+    let micAnimation;
+    let heartBurstTimer;
+    let letterTimerOne;
+    let letterTimerTwo;
+
+    const noButtonMessages = [
+      "Too quick! Try again.",
+      "Look at this slow ass",
+      "LMAO, TOO SLOW TO CLICK",
+      "LMFAOOO FAT ASS IS TOO FAT TO CLICK ON IT",
+      "Swipe faster!",
+      "HAH FKIN DUMASS"
+    ];
+
+    function showToast(message) {
+      clearTimeout(toastTimer);
+      toast.textContent = message;
+      toast.classList.add("show");
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 2100);
+    }
+
+    function randomNoButtonMessage() {
+      return noButtonMessages[Math.floor(Math.random() * noButtonMessages.length)];
+    }
+
+    yesButton.addEventListener("click", () => {
+      pageOne.classList.remove("active");
+      pageTwo.classList.add("active");
+      song.play().catch(() => {});
+    });
+
+    function moveNoButton() {
+      const x = (Math.random() * 110 + 28) * (Math.random() > 0.5 ? 1 : -1);
+      const y = (Math.random() * 48 + 8) * (Math.random() > 0.5 ? 1 : -1);
+      noButton.style.transform = `translate(${x}px, ${y}px)`;
+    }
+
+    noButton.addEventListener("pointerenter", () => {
+      if (window.matchMedia("(pointer: fine)").matches) {
+        moveNoButton();
+      }
+    });
+
+    noButton.addEventListener("pointerdown", (event) => {
+      if (!window.matchMedia("(pointer: fine)").matches) {
+        event.preventDefault();
+        moveNoButton();
+        showToast(randomNoButtonMessage());
+      }
+    });
+
+    noButton.addEventListener("click", () => {
+      showToast("No escape. Gift too cute.");
+      noButton.style.transform = "translate(0, 0)";
+    });
+
+    memoryBackButton.addEventListener("click", () => {
+      memoriesPage.classList.remove("active");
+      pageTwo.classList.add("active");
+    });
+
+    letterBackButton.addEventListener("click", () => {
+      clearTimeout(letterTimerOne);
+      clearTimeout(letterTimerTwo);
+      letterPage.classList.remove("active", "opening", "open", "ready");
+      pageTwo.classList.add("active");
+    });
+
+    openLetterButton.addEventListener("click", () => {
+      clearTimeout(letterTimerOne);
+      clearTimeout(letterTimerTwo);
+      letterPage.classList.add("opening");
+      letterTimerOne = setTimeout(() => {
+        letterPage.classList.add("open");
+      }, 720);
+      letterTimerTwo = setTimeout(() => {
+        letterPage.classList.remove("opening");
+        letterPage.classList.add("ready");
+      }, 1380);
+    });
+
+    cakeBackButton.addEventListener("click", () => {
+      stopMicListening();
+      cakePage.classList.remove("active", "lit", "blown");
+      pageTwo.classList.add("active");
+    });
+
+    homeBackButton.addEventListener("click", () => {
+      bouquetPage.classList.remove("active");
+      pageTwo.classList.add("active");
+    });
+
+    function resetCake() {
+      stopMicListening();
+      clearInterval(heartBurstTimer);
+      cakeHearts.innerHTML = "";
+      cakePage.classList.remove("blown");
+      cakePage.classList.add("lit");
+      cakeInstruction.textContent = "Blow into the mic";
+    }
+
+    async function startMicListening() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        cakeInstruction.textContent = "Mic not available here";
+        return;
+      }
+
+      try {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioContext.createMediaStreamSource(micStream);
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+        cakeInstruction.textContent = "Blow into the mic";
+        listenForBlow();
+      } catch {
+        cakeInstruction.textContent = "Allow mic access, then blow";
+      }
+    }
+
+    function listenForBlow() {
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      let loudFrames = 0;
+
+      function tick() {
+        analyser.getByteFrequencyData(data);
+        const volume = data.reduce((sum, value) => sum + value, 0) / data.length;
+
+        if (volume > 34) {
+          loudFrames += 1;
+        } else {
+          loudFrames = Math.max(0, loudFrames - 1);
+        }
+
+        if (loudFrames > 5) {
+          blowCandles();
+          return;
+        }
+
+        micAnimation = requestAnimationFrame(tick);
+      }
+
+      tick();
+    }
+
+    function stopMicListening() {
+      cancelAnimationFrame(micAnimation);
+      if (micStream) {
+        micStream.getTracks().forEach((track) => track.stop());
+      }
+      if (audioContext && audioContext.state !== "closed") {
+        audioContext.close();
+      }
+      micStream = null;
+      audioContext = null;
+      analyser = null;
+    }
+
+    function createCakeHeart() {
+      const heart = document.createElement("span");
+      heart.className = "cake-heart";
+      heart.textContent = "♥";
+      heart.style.setProperty("--x", `${Math.random() * 100}%`);
+      heart.style.setProperty("--size", `${Math.random() * 18 + 13}px`);
+      heart.style.setProperty("--alpha", `${Math.random() * 0.45 + 0.38}`);
+      heart.style.setProperty("--speed", `${Math.random() * 1.9 + 2.4}s`);
+      heart.style.setProperty("--tilt", `${Math.random() * 50 - 25}deg`);
+      cakeHearts.append(heart);
+      heart.addEventListener("animationend", () => heart.remove());
+    }
+
+    function startHeartBurst() {
+      for (let i = 0; i < 80; i += 1) {
+        setTimeout(createCakeHeart, i * 18);
+      }
+
+      heartBurstTimer = setInterval(() => {
+        for (let i = 0; i < 14; i += 1) {
+          createCakeHeart();
+        }
+      }, 260);
+
+      setTimeout(() => clearInterval(heartBurstTimer), 5200);
+    }
+
+    function blowCandles() {
+      stopMicListening();
+      cakePage.classList.remove("lit");
+      cakePage.classList.add("blown");
+      cakeInstruction.textContent = "";
+      startHeartBurst();
+    }
+
+    document.querySelectorAll(".memory-card").forEach((button) => {
+      button.addEventListener("click", () => {
+        const photo = button.querySelector(".memory-photo");
+        viewerImage.src = photo.src;
+        photoViewer.classList.add("open");
+        photoViewer.setAttribute("aria-hidden", "false");
+      });
+    });
+
+    function closeViewer() {
+      photoViewer.classList.remove("open");
+      photoViewer.setAttribute("aria-hidden", "true");
+      viewerImage.src = "";
+    }
+
+    viewerCloseButton.addEventListener("click", closeViewer);
+    photoViewer.addEventListener("click", (event) => {
+      if (event.target === photoViewer) {
+        closeViewer();
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && photoViewer.classList.contains("open")) {
+        closeViewer();
+      }
+    });
+
+    document.querySelectorAll(".gift-card").forEach((button, index) => {
+      button.addEventListener("click", () => {
+        if (index === 0) {
+          clearTimeout(toastTimer);
+          toast.classList.remove("show");
+          pageTwo.classList.remove("active");
+          memoriesPage.classList.add("active");
+          return;
+        }
+
+        if (index === 1) {
+          clearTimeout(toastTimer);
+          toast.classList.remove("show");
+          clearTimeout(letterTimerOne);
+          clearTimeout(letterTimerTwo);
+          letterPage.classList.remove("opening", "open", "ready");
+          pageTwo.classList.remove("active");
+          letterPage.classList.add("active");
+          return;
+        }
+
+        if (index === 2) {
+          clearTimeout(toastTimer);
+          toast.classList.remove("show");
+          pageTwo.classList.remove("active");
+          cakePage.classList.add("active");
+          resetCake();
+          startMicListening();
+          song.play().catch(() => {});
+          return;
+        }
+
+        if (index === 3) {
+          clearTimeout(toastTimer);
+          toast.classList.remove("show");
+          pageTwo.classList.remove("active");
+          bouquetPage.classList.add("active");
+          return;
+        }
+
+        const label = button.getAttribute("aria-label") || "surprise";
+        showToast(`${label} is ready.`);
+      });
+    });
+  </script>
+</body>
+</html>
