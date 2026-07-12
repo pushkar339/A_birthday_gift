@@ -1938,19 +1938,11 @@
     let audioContext;
     let micStream;
     let analyser;
+    let micSource;
     let micAnimation;
     let heartBurstTimer;
     let letterTimerOne;
     let letterTimerTwo;
-
-    const noButtonMessages = [
-      "Too quick! Try again.",
-      "Look at this slow ass",
-      "LMAO, TOO SLOW TO CLICK",
-      "LMFAOOO FAT ASS IS TOO FAT TO CLICK ON IT",
-      "Swipe faster!",
-      "HAH FKIN DUMASS"
-    ];
 
     function showToast(message) {
       clearTimeout(toastTimer);
@@ -1959,14 +1951,28 @@
       toastTimer = setTimeout(() => toast.classList.remove("show"), 2100);
     }
 
-    function randomNoButtonMessage() {
-      return noButtonMessages[Math.floor(Math.random() * noButtonMessages.length)];
+    async function ensureSongPlayback() {
+      if (!song) return;
+
+      if (audioContext && audioContext.state === "suspended") {
+        try {
+          await audioContext.resume();
+        } catch {
+          // Ignore autoplay restrictions and keep going.
+        }
+      }
+
+      try {
+        await song.play();
+      } catch {
+        // Ignore autoplay restrictions and keep going.
+      }
     }
 
     yesButton.addEventListener("click", () => {
       pageOne.classList.remove("active");
       pageTwo.classList.add("active");
-      song.play().catch(() => {});
+      ensureSongPlayback();
     });
 
     function moveNoButton() {
@@ -1985,12 +1991,10 @@
       if (!window.matchMedia("(pointer: fine)").matches) {
         event.preventDefault();
         moveNoButton();
-        showToast(randomNoButtonMessage());
       }
     });
 
     noButton.addEventListener("click", () => {
-      showToast("No escape. Gift too cute.");
       noButton.style.transform = "translate(0, 0)";
     });
 
@@ -2046,12 +2050,30 @@
       }
 
       try {
-        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const source = audioContext.createMediaStreamSource(micStream);
-        analyser = audioContext.createAnalyser();
-        analyser.fftSize = 256;
-        source.connect(analyser);
+        micStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false
+          }
+        });
+
+        if (!audioContext) {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        if (audioContext.state === "suspended") {
+          await audioContext.resume();
+        }
+
+        if (!micSource) {
+          micSource = audioContext.createMediaStreamSource(micStream);
+          analyser = audioContext.createAnalyser();
+          analyser.fftSize = 256;
+          micSource.connect(analyser);
+        }
+
+        await ensureSongPlayback();
         cakeInstruction.textContent = "Blow into the mic";
         listenForBlow();
       } catch {
@@ -2086,15 +2108,26 @@
 
     function stopMicListening() {
       cancelAnimationFrame(micAnimation);
+      micAnimation = null;
+
+      if (micSource) {
+        micSource.disconnect();
+        micSource = null;
+      }
+
+      if (analyser) {
+        analyser.disconnect();
+        analyser = null;
+      }
+
       if (micStream) {
         micStream.getTracks().forEach((track) => track.stop());
+        micStream = null;
       }
+
       if (audioContext && audioContext.state !== "closed") {
-        audioContext.close();
+        audioContext.suspend().catch(() => {});
       }
-      micStream = null;
-      audioContext = null;
-      analyser = null;
     }
 
     function createCakeHeart() {
@@ -2188,7 +2221,7 @@
           cakePage.classList.add("active");
           resetCake();
           startMicListening();
-          song.play().catch(() => {});
+          ensureSongPlayback();
           return;
         }
 
