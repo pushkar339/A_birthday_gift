@@ -1994,9 +1994,9 @@
     let letterTimerOne;
     let letterTimerTwo;
     const BLOW_SETTINGS = {
-      absoluteThreshold: 180,
-      peakThreshold: 240,
-      requiredFrames: 18
+      absoluteThreshold: 0.12,
+      relativeThreshold: 0.08,
+      requiredFrames: 6
     };
 
     function showToast(message) {
@@ -2182,18 +2182,22 @@
     }
 
     function listenForBlow() {
-      const data = new Uint8Array(analyser.frequencyBinCount);
+      const waveform = new Uint8Array(analyser.fftSize);
       let loudFrames = 0;
-      let baseline = 120;
-      const relativeThreshold = 10;
+      let baseline = 0.1;
 
       function tick() {
-        analyser.getByteFrequencyData(data);
-        const average = data.reduce((sum, value) => sum + value, 0) / data.length;
-        const peak = Math.max(...data);
-        const intensity = average * 0.45 + peak * 0.55;
-        const riseAboveBaseline = intensity - baseline;
-        const isBlow = riseAboveBaseline > relativeThreshold && intensity > BLOW_SETTINGS.absoluteThreshold && peak > BLOW_SETTINGS.peakThreshold;
+        analyser.getByteTimeDomainData(waveform);
+
+        let sumSquares = 0;
+        for (let i = 0; i < waveform.length; i += 1) {
+          const centered = waveform[i] - 128;
+          sumSquares += centered * centered;
+        }
+
+        const rms = Math.sqrt(sumSquares / waveform.length) / 128;
+        const riseAboveBaseline = rms - baseline;
+        const isBlow = rms > BLOW_SETTINGS.absoluteThreshold && riseAboveBaseline > BLOW_SETTINGS.relativeThreshold;
 
         if (isBlow) {
           loudFrames += 1;
@@ -2201,7 +2205,7 @@
           loudFrames = Math.max(0, loudFrames - 1);
         }
 
-        baseline = baseline * 0.9 + intensity * 0.1;
+        baseline = baseline * 0.9 + rms * 0.1;
 
         if (loudFrames >= BLOW_SETTINGS.requiredFrames) {
           blowCandles();
