@@ -2179,20 +2179,27 @@
     function listenForBlow() {
       const data = new Uint8Array(analyser.frequencyBinCount);
       let loudFrames = 0;
-      const requiredLoudFrames = 10;
-      const threshold = 150;
+      let baseline = 120;
+      const requiredLoudFrames = 18;
+      const relativeThreshold = 90;
+      const absoluteThreshold = 180;
+      const peakThreshold = 240;
 
       function tick() {
         analyser.getByteFrequencyData(data);
         const average = data.reduce((sum, value) => sum + value, 0) / data.length;
         const peak = Math.max(...data);
-        const intensity = average * 0.55 + peak * 0.45;
+        const intensity = average * 0.45 + peak * 0.55;
+        const riseAboveBaseline = intensity - baseline;
+        const isBlow = riseAboveBaseline > relativeThreshold && intensity > absoluteThreshold && peak > peakThreshold;
 
-        if (intensity > threshold) {
+        if (isBlow) {
           loudFrames += 1;
         } else {
           loudFrames = Math.max(0, loudFrames - 1);
         }
+
+        baseline = baseline * 0.9 + intensity * 0.1;
 
         if (loudFrames >= requiredLoudFrames) {
           blowCandles();
