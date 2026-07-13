@@ -2185,7 +2185,7 @@
       const data = new Uint8Array(analyser.frequencyBinCount);
       let loudFrames = 0;
       let baseline = 120;
-      const relativeThreshold = 90;
+      const relativeThreshold = 50;
 
       function tick() {
         analyser.getByteFrequencyData(data);
