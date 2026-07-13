@@ -1993,6 +1993,11 @@
     let heartBurstTimer;
     let letterTimerOne;
     let letterTimerTwo;
+    const BLOW_SETTINGS = {
+      absoluteThreshold: 180,
+      peakThreshold: 240,
+      requiredFrames: 18
+    };
 
     function showToast(message) {
       clearTimeout(toastTimer);
@@ -2180,10 +2185,7 @@
       const data = new Uint8Array(analyser.frequencyBinCount);
       let loudFrames = 0;
       let baseline = 120;
-      const requiredLoudFrames = 18;
       const relativeThreshold = 90;
-      const absoluteThreshold = 180;
-      const peakThreshold = 240;
 
       function tick() {
         analyser.getByteFrequencyData(data);
@@ -2191,7 +2193,7 @@
         const peak = Math.max(...data);
         const intensity = average * 0.45 + peak * 0.55;
         const riseAboveBaseline = intensity - baseline;
-        const isBlow = riseAboveBaseline > relativeThreshold && intensity > absoluteThreshold && peak > peakThreshold;
+        const isBlow = riseAboveBaseline > relativeThreshold && intensity > BLOW_SETTINGS.absoluteThreshold && peak > BLOW_SETTINGS.peakThreshold;
 
         if (isBlow) {
           loudFrames += 1;
@@ -2201,7 +2203,7 @@
 
         baseline = baseline * 0.9 + intensity * 0.1;
 
-        if (loudFrames >= requiredLoudFrames) {
+        if (loudFrames >= BLOW_SETTINGS.requiredFrames) {
           blowCandles();
           return;
         }
